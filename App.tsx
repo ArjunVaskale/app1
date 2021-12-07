@@ -66,7 +66,7 @@ function HomeScreen({navigation}:{navigation:any}) {
         })
         .catch((error) => console.error(error))
         .finally(() => setLoading(false));
-    }, 100000000);
+    }, 10000);
     return () => {
       clearInterval(interval)
     };
