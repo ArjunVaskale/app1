@@ -1,51 +1,57 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState,FC } from 'react';
 import { FlatList, Text, View, StyleSheet, TextInput, TouchableHighlight } from 'react-native';
-import { SearchBar } from 'react-native-elements';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
+import { withTheme } from 'react-native-paper';
+import { DefaultTheme, Provider as PaperProvider } from 'react-native-paper';
 
 
-export type Props = {
 
-  data: string;
-  isLoading: boolean;
-  link: string;
-  number: number;
-  text: string;
-  onChangeText: (text: string) => void;
-
-
+const theme = {
+  ...DefaultTheme,
+  roundness: 2,
+  colors: {
+    ...DefaultTheme.colors,
+    primary: '#3498db',
+    accent: '#f1c40f',
+  },
 };
 
-function HomeScreen({navigation}) {
 
-  const [data, setData] = useState({})
+function HomeScreen({navigation}:{navigation:any}) {
+
+  const [data, setData] = useState<any>({})
   const [isLoading, setLoading] = useState(true)
-  const [inputText, setInputText] = useState()
+  const [inputText, setInputText] = useState<string>("")
   const [number, setNumber] = useState(0)
+  const [filterdata , setFilterData] = useState<any>()
 
-  const onChangeTextFun = (t) => {
+
+  const onChangeTextFun = (t:string) => {
     let text = t.toLowerCase()
-    let fullData = data
-    let filterName = fullData.filter((temp) => {
-      return temp.title.toLowerCase().match(text)
-    })
-    setData(filterName)
-    setInputText(t)
-    console.log(filterName[0])
-    if (inputText.length == 0) {
-      setData(fullData)
-
+    if (text) {
+      let filterName = data.filter((temp:any) => {
+        console.log(temp.title , text)
+        return JSON.stringify(temp).includes(text);
+      })
+      setFilterData(filterName)
+      console.log(filterdata.length)
+    }else{
+      console.log(filterdata.length)
+      setFilterData(data)
     }
   }
+
+
   useEffect(() => {
     fetch('https://hn.algolia.com/api/v1/search_by_date?tags=story&page=' + number)
       .then((response) => response.json())
       .then((val) => {
         setData(val.hits)
+        setFilterData(val.hits)
         setLoading(false)
         setNumber(number + 1)
-        console.log('values are ' + val.hits[0].title)
+        // console.log('values are ' + val.hits[0].title)
       })
       .catch((error) => console.error(error))
   }, [])
@@ -56,13 +62,14 @@ function HomeScreen({navigation}) {
       fetch('https://hn.algolia.com/api/v1/search_by_date?tags=story&page=' + number)
         .then((response) => response.json())
         .then((val) => {
-          setData([...data, ...val.hits])
-          console.log('values are ' + val.hits[0].title)
+          setData([...data, ...val.hits] )
+          setFilterData([...data, ...val.hits] )
+          // console.log('values are ' + val.hits[0].title)
           setNumber(number + 1)
         })
         .catch((error) => console.error(error))
         .finally(() => setLoading(false));
-    }, 10000);
+    }, 100000000);
     return () => {
       clearInterval(interval)
     };
@@ -73,36 +80,38 @@ function HomeScreen({navigation}) {
 
 
     <View style={styles.container}>
-      {isLoading ? <Text>Loading...</Text> :
+      {isLoading ? <Text>Loading Data...</Text> :
         (
 
 
-          <View style={{ flexDirection: 'column', justifyContent: 'space-between' }}>
+          <View style={{ flex:1 , flexDirection: 'column', justifyContent: 'center' , alignItems:'center' }}>
 
-            <TextInput style={{ borderWidth: 2, marginTop: 50, height: 70, width: 400, padding: 10 }}
-              placeholder="Type Here..."
+            <TextInput style={{ borderWidth: 2, margin:10 ,padding:10 , height: 50, width: 400 }}
+              placeholder="Search"
               onChangeText={onChangeTextFun}
             />
 
             <FlatList
-              data={data}
+              data={filterdata}
               // keyExtractor={({ created_at }, index) => created_at}
               renderItem={({ item }) => (
                 <View>
-                  <TouchableHighlight onPress={() => {navigation.navigate('Json',{ data : JSON.stringify({"Titla":item.title ,
-                                                                                                          "URL":item.url,
-                                                                                                          "Created Time":item.created_at,
-                                                                                                          "Tags":item._tags,
-                                                                                                          "Author":item.author
-                                                                                                          }) })}}>
-                  <Text style={styles.item}>Title:-{item.title}<br/>
-                                            URL:-{item.url}<br />
-                                            Created Time:-{item.created_at}<br />
-                                            Tags:-{item._tags}<br />
-                                            Author:-{item.author}<br />
+                  <TouchableHighlight onPress={() => {navigation.navigate('Json',
+                                                { data : JSON.stringify({"Titla":item.title ,
+                                                "URL":item.url,
+                                                "Created Time":item.created_at,
+                                                "Tags":item._tags,
+                                                "Author":item.author
+                                                }) })}}>
+                  <Text style={styles.item}>Title:-{item.title}
+                                            URL:-{item.url}
+                                            Created Time:-{item.created_at}
+                                            Tags:-{item._tags}
+                                            Author:-{item.author}
 
                                             
                   </Text>
+                  
                 </TouchableHighlight>
                 </View>
 
@@ -110,14 +119,15 @@ function HomeScreen({navigation}) {
             />
           </View>
         )}
-      <Text>hello dudu</Text>
+
+      
 
     </View>
   );
 };
 
 
-function JsonScreen({route , navigation}) {
+function JsonScreen({route , navigation}:{route:any , navigation:any}) {
    const { data } = route.params ;
 
 
@@ -144,17 +154,20 @@ function App() {
         </NavigationContainer>
         );
 }
-export default App;
+
+
+export default withTheme(App);
 
         const styles = StyleSheet.create({
           container :{
           flex : 1 ,
         justifyContent : 'center' ,
         alignItems : 'center'
-  },
+        },
         item :{
           backgroundColor:'lightblue',
         padding:20,
+     
         marginVertical : 10,
         marginHorizontal:10
   }
@@ -191,5 +204,7 @@ export default App;
   //    }
   // }
   // fetchdata()\
+
+  // temp.title.toLowerCase().match(text)
 
 
