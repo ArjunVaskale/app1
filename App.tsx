@@ -1,22 +1,42 @@
 import React, { useEffect, useRef, useState,FC } from 'react';
-import { FlatList, Text, View, StyleSheet, TextInput, TouchableHighlight } from 'react-native';
+import { FlatList, Text, View, StyleSheet, TouchableHighlight } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { NavigationContainer } from '@react-navigation/native';
+
 import { withTheme } from 'react-native-paper';
-import { DefaultTheme, Provider as PaperProvider } from 'react-native-paper';
+
+import { TextInput } from 'react-native-paper';
+import {
+  NavigationContainer,
+  DarkTheme as NavigationDarkTheme,
+  DefaultTheme as NavigationDefaultTheme,
+} from '@react-navigation/native';
+import {
+  DarkTheme as PaperDarkTheme,
+  DefaultTheme as PaperDefaultTheme,
+  Provider as PaperProvider,
+} from 'react-native-paper';
+import merge from 'deepmerge';
+
+import { Appbar } from 'react-native-paper';
+
+function CustomNavigationBar({ navigation, back }:{navigation:any  , back:any}) {
+  return (
+    <Appbar.Header>
+      {back ? <Appbar.BackAction onPress={navigation.goBack} /> : null}
+      <Appbar.Content title="Asteroid List" />
+    </Appbar.Header>
+  );
+}
 
 
-
-const theme = {
-  ...DefaultTheme,
-  roundness: 2,
+const CombinedDefaultTheme = {
+  ...PaperDefaultTheme,
+  ...NavigationDefaultTheme,
   colors: {
-    ...DefaultTheme.colors,
-    primary: '#3498db',
-    accent: '#f1c40f',
+    ...PaperDefaultTheme.colors,
+    ...NavigationDefaultTheme.colors,
   },
 };
-
 
 function HomeScreen({navigation}:{navigation:any}) {
 
@@ -61,12 +81,11 @@ function HomeScreen({navigation}:{navigation:any}) {
         .then((val) => {
           setData([...data, ...val.hits] )
           setFilterData([...data, ...val.hits] )
-          // console.log('values are ' + val.hits[0].title)
           setNumber(number + 1)
         })
         .catch((error) => console.error(error))
         .finally(() => setLoading(false));
-    }, 100000000);
+    }, 10000);
     return () => {
       clearInterval(interval)
     };
@@ -83,7 +102,7 @@ function HomeScreen({navigation}:{navigation:any}) {
 
           <View style={{ flex:1 , flexDirection: 'column', justifyContent: 'center' , alignItems:'center' }}>
 
-            <TextInput style={{ borderWidth: 2, margin:10 ,padding:10 , height: 50, width: 400 }}
+            <TextInput mode="outlined" style={{  margin:10 ,padding:10 , height: 50, width: 400 }}
               placeholder="Search"
               onChangeText={onChangeTextFun}
             />
@@ -120,6 +139,7 @@ function HomeScreen({navigation}:{navigation:any}) {
       
 
     </View>
+
   );
 };
 
@@ -130,7 +150,7 @@ function JsonScreen({route , navigation}:{route:any , navigation:any}) {
 
   return (
     <View style={{flex:1 ,justifyContent:'center' , alignItems:'center' }}>
-      <Text style={{backgroundColor:'skyblue' ,margin:5 , padding:10}}> JSON DATA VIEW </Text>
+      {/* <Text style={{backgroundColor:'skyblue' ,margin:5 , padding:10}}> JSON DATA VIEW </Text> */}
       <Text style={{backgroundColor:'lightblue' ,margin:5 , padding:10}}>{data}</Text>
     </View>
   )
@@ -141,14 +161,21 @@ function App() {
 
   return (
 
-    <NavigationContainer>
-      <Stack.Navigator>
 
-        <Stack.Screen name='Home' component={HomeScreen}/>
-          <Stack.Screen name='Json' component={JsonScreen}/>
 
-          </Stack.Navigator>
-        </NavigationContainer>
+
+    <PaperProvider theme={CombinedDefaultTheme}>
+    <NavigationContainer theme={CombinedDefaultTheme}>
+      <Stack.Navigator initialRouteName="Home" 
+                        screenOptions={{header: (props) => <CustomNavigationBar {...props} />,}}>
+        <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="Json" component={JsonScreen} />
+      </Stack.Navigator>
+      </NavigationContainer>
+    </PaperProvider>
+
+
+
         );
 }
 
@@ -170,38 +197,5 @@ export default withTheme(App);
   }
 
 })
-
-
-
-  // useEffect(() => {
-  //   link = 'https://hn.algolia.com/api/v1/search_by_date?tags=story&page=' + number
-  //   fetch(link)
-  //     .then((response) => response.json())
-  //     .then((json) => setData(json))
-  //     .catch((error) => console.error(error))
-  //     .finally(() => setLoading(false));
-      
-  // }, []);
-
-
-
-  // const url = 'https://hn.algolia.com/api/v1/search_by_date?tags=story&page=0'
-  // const fetchdata = async() => {
-  //    try{
-
-  //      const response = await fetch(url);
-  //      const json = await response.json();
-  //      console.log(json)
-  //      setData(json)
-
-
-  //    }
-  //    catch(error){
-  //      console.log(error)
-  //    }
-  // }
-  // fetchdata()\
-
-  // temp.title.toLowerCase().match(text)
 
 
